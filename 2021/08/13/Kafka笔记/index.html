@@ -1,0 +1,362 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kafka笔记 | Varrella</title><meta name="author" content="Varrella"><meta name="copyright" content="Varrella"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="一、Kafka系统架构1、BrokerKafka集群包含一个或多个服务器，服务器节点称为broker。 2、Topic每条发布到Kafka集群的消息都有一个类别，这个类别称为Topic，物理上不同Topic的消息分开存储，逻辑上一个Topic的消息虽然保存于一个或多个broker上，但用户只需指定Topic即可生产或消费，而不必关心数据存于何处。 3、Partition Topic中的数据分割为一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kafka笔记">
+<meta property="og:url" content="https://varrella.github.io/2021/08/13/Kafka%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="Varrella">
+<meta property="og:description" content="一、Kafka系统架构1、BrokerKafka集群包含一个或多个服务器，服务器节点称为broker。 2、Topic每条发布到Kafka集群的消息都有一个类别，这个类别称为Topic，物理上不同Topic的消息分开存储，逻辑上一个Topic的消息虽然保存于一个或多个broker上，但用户只需指定Topic即可生产或消费，而不必关心数据存于何处。 3、Partition Topic中的数据分割为一">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/varrella/ImgHosting/blog_picturett-2560x1440-bg-183ceb7.jpg">
+<meta property="article:published_time" content="2021-08-13T07:26:21.618Z">
+<meta property="article:modified_time" content="2021-08-14T12:07:16.788Z">
+<meta property="article:author" content="Varrella">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/varrella/ImgHosting/blog_picturett-2560x1440-bg-183ceb7.jpg"><link rel="shortcut icon" href="/img/favicon.jpg"><link rel="canonical" href="https://varrella.github.io/2021/08/13/Kafka%E7%AC%94%E8%AE%B0/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: 'days',
+  date_suffix: {
+    just: 'Just',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'mediumZoom',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-08-14 20:07:16'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="author-avatar"><img class="avatar-img" src="https://cdn.jsdelivr.net/gh/varrella/ImgHosting/blog_picture微信图片_20210411174101.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">15</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/gh/varrella/ImgHosting/blog_picturett-2560x1440-bg-183ceb7.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Varrella</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Kafka笔记</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2021-08-13T07:26:21.618Z" title="Created 2021-08-13 15:26:21">2021-08-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2021-08-14T12:07:16.788Z" title="Updated 2021-08-14 20:07:16">2021-08-14</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Kafka笔记"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h3 id="一、Kafka系统架构"><a href="#一、Kafka系统架构" class="headerlink" title="一、Kafka系统架构"></a>一、Kafka系统架构</h3><h5 id="1、Broker"><a href="#1、Broker" class="headerlink" title="1、Broker"></a>1、Broker</h5><p><code>Kafka</code>集群包含一个或多个服务器，服务器节点称为<code>broker</code>。</p>
+<h5 id="2、Topic"><a href="#2、Topic" class="headerlink" title="2、Topic"></a>2、Topic</h5><p>每条发布到<code>Kafka</code>集群的消息都有一个类别，这个类别称为<code>Topic</code>，物理上不同<code>Topic</code>的消息分开存储，逻辑上一个<code>Topic</code>的消息虽然保存于一个或多个<code>broker</code>上，但用户只需指定<code>Topic</code>即可生产或消费，而不必关心数据存于何处。</p>
+<h5 id="3、Partition"><a href="#3、Partition" class="headerlink" title="3、Partition"></a>3、Partition</h5><ul>
+<li><p><code>Topic</code>中的数据分割为一个或多个<code>partition</code>。每个<code>Topic</code>至少有一个<code>partition</code>，当生产者生产数据的时候，根据分配策略，然后将消息追加到指定的分区的末尾（队列）。</p>
+</li>
+<li><p>每条消息都有一个自增的编号，用于标识顺序，以及标识消息的偏移量</p>
+</li>
+<li><p>每个<code>partition</code>中的数据使用多个<code>segment</code>文件存储</p>
+</li>
+<li><p><code>partition</code>中的数据是有顺序的，不同<code>partition</code>间的数据丢失了数据的顺序</p>
+</li>
+<li><p>如果<code>topic</code>有多个<code>partition</code>，消费数据时就不能保证数据的顺序，严格保证消息的新消费顺序的场景下，需要将<code>partition</code>数目设置为1。</p>
+</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/varrella/ImgHosting/20210813205902.png"></p>
+<h5 id="4、Leader"><a href="#4、Leader" class="headerlink" title="4、Leader"></a>4、Leader</h5><ul>
+<li><p>每个partition有多个副本，其中有且仅有一个作为Leader，Leader是当前负责数据的读写的partition</p>
+</li>
+<li><p>```<br>1、producer先从zookeeper的”/brokers/…/state”节点找到该partition的leader<br>2、producer将消息发送给leader<br>3、leader将消息写入本地log<br>4、followers从leader pull消息，写入本地log后leader发送ACK<br>5、leader收到所有ISR中的replica的ACK后，增加HW（high watermark，最后commit的offset）并向producer发送ACK</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">##### 5、Follower</span><br><span class="line"></span><br><span class="line">- &#96;follower&#96;跟随&#96;leader&#96;，所有写请求都通过&#96;leader&#96;路由，数据变更会广播给所有&#96;follower&#96;，&#96;follower&#96;与&#96;leader&#96;保持数据同步。</span><br><span class="line">- 如果&#96;leader&#96;失效，则从&#96;follower&#96;中选举一个新的&#96;leader&#96;</span><br><span class="line">- 当&#96;follower&#96;挂掉、卡主或者同步太慢，&#96;leader&#96;会把这个&#96;follower&#96;从&#96;“in sync replicas”（ISR）&#96;列表中删除，重新创建一个&#96;follower&#96;。</span><br><span class="line"></span><br><span class="line">##### 6、Replication</span><br><span class="line"></span><br><span class="line">- 数据会存放到&#96;topic&#96;的&#96;partition&#96;中，但是有可能分区会损坏，需要对分区的数据进行备份</span><br><span class="line"></span><br><span class="line">- 将分区分为&#96;leader(1)&#96;和&#96;follower(N)&#96;</span><br><span class="line"></span><br><span class="line">  - &#96;leader&#96;负责写入和读取数据</span><br><span class="line">  - &#96;follower&#96;只负责备份</span><br><span class="line">  - 保证了数据的一致性</span><br><span class="line"></span><br><span class="line">- 备份数设置为 &#96;N&#96;，表示&#96;主 + 备份 &#x3D; N&#96;</span><br><span class="line"></span><br><span class="line">  - &#96;&#96;&#96;</span><br><span class="line">    kafka分配Replica的算法如下：</span><br><span class="line">    1、将所有broker（假设共有n个broker）和待分配的partition排序</span><br><span class="line">    2、将第i个partition分配到第(i mod n)个broker上</span><br><span class="line">    3、将第i个partition的第j个replica分配到第((i + j) mod n)个broker上</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h5 id="7、Producer"><a href="#7、Producer" class="headerlink" title="7、Producer"></a>7、Producer</h5><ul>
+<li>生产者即数据的发布者，该角色将消息发布到<code>Kafka</code>的<code>topic</code>中</li>
+<li><code>broker</code>接收到生产者发送的消息后，<code>broker</code>将消息追加到当前用于追加数据的<code>segment</code>文件中</li>
+<li>生产者发送的消息，存储到一个<code>partition</code>中，生产者也可以指定数据存储的<code>partition</code></li>
+</ul>
+<h5 id="8、Consumer"><a href="#8、Consumer" class="headerlink" title="8、Consumer"></a>8、Consumer</h5><ul>
+<li>消费者可以从<code>broker</code>中读取数据，消费者可以消费多个<code>topic</code>中的数据</li>
+<li><code>kafka</code>提供了两套<code>consumer API</code></li>
+</ul>
+<h5 id="9、Consumer-Group"><a href="#9、Consumer-Group" class="headerlink" title="9、Consumer  Group"></a>9、Consumer  Group</h5><ul>
+<li>每个<code>consumer</code>属于一个特定的<code>consumer group</code>（可为每个<code>consumer</code>指定<code>group name</code>，若不指定<code>group name</code>则属于默认的<code>group</code>）</li>
+<li>将多个消费者集中到一起去处理某一个<code>topic</code>的数据，可以更快地提高数据的消费能力</li>
+<li>整个消费者共享一组偏移量（防止数据被重复读取，一组的多个消费者不回消费相同的数据），因为一个<code>topic</code>有多个分区</li>
+</ul>
+<h5 id="10、offset偏移量"><a href="#10、offset偏移量" class="headerlink" title="10、offset偏移量"></a>10、offset偏移量</h5><ul>
+<li>可唯一标识一条消息</li>
+<li>偏移量决定读取数据的位置，不会有线程安全的问题，消费者通过偏移量来决定下次读取的消息</li>
+<li>消息被消费之后，并不会马上删除，这样多个业务就可以重复使用<code>kafka</code>的消息</li>
+<li>某一个业务也可以通过修改偏移量大到重新读取消息的目的，偏移量由用户控制</li>
+<li>消息最终还是会被删除的，默认生命周期为1周</li>
+</ul>
+<h5 id="11、Kafka拓扑结构"><a href="#11、Kafka拓扑结构" class="headerlink" title="11、Kafka拓扑结构"></a>11、Kafka拓扑结构</h5><p><img src="https://cdn.jsdelivr.net/gh/varrella/ImgHosting/20210813213403.png"></p>
+<p><code>Kafka</code>通过<code>zookeeper</code>来存储集群得到meta信息。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/varrella/ImgHosting/20210813220545.png"></p>
+<h3 id="二、Kafka数据检索机制"><a href="#二、Kafka数据检索机制" class="headerlink" title="二、Kafka数据检索机制"></a>二、Kafka数据检索机制</h3><ul>
+<li><p><code>topic</code>在物理层面以<code>partition</code>为分组，一个<code>topic</code>可以分成若干个<code>partition</code>，<code>partition</code>还可以细分为<code>Segment</code>，一个<code>partition</code>物理上由多个<code>Segment</code>组成。<code>segment</code>的参数有两个：</p>
+<ul>
+<li><code>log.segment.bytes</code>: 单个<code>segment</code>可容纳的最大数据量，默认为<code>1GB</code></li>
+<li><code>log.segment.ms</code>: <code>Kafka</code>在<code>commit</code>一个未写满的<code>segment</code>前，所等待的时间(默认为7天)</li>
+</ul>
+</li>
+<li><p><code>LogSegment</code>文件由两部分组成，分别为<code>.index</code>文件和<code>.log</code>文件，分别表示为<code>Segment</code>索引文件和数据文件。</p>
+<ul>
+<li><p><code>partition</code>全局的第一 个<code>segment</code>从0开始， 后续每个<code>segment</code>文件名为上一个<code>segment</code>文件最后一 条消息的<code>offset</code>值</p>
+</li>
+<li><p>数值大小为64位，20位数字字符长度，没有数字用0填充</p>
+</li>
+<li><p>```<br>第一个segment<br>00000000000000000000.index<br>00000000000000000000.1og<br>第二个segment，文件命名以第一个segment的最后一条消息的offset组成<br>00000000000000170410.index<br>00000000000000170410.1og<br>第三个segment，文件命名以上一个segment的最后一条消息的offset组成<br>00000000000000239430.index<br>00000000000000239430.1og</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">  - 消息都具有固定的物理结构，包括: &#96;offset(8 Bytes)&#96;、消息体的大小&#96;(4 Bytes)&#96;、&#96;crc32(4 Bytes)&#96;、&#96;magic(1 Byte)&#96;、&#96;attributes(1 Byte)&#96;。&#96;key length(4 Bytes)&#96;、&#96;key(K Bytes)&#96;、&#96;payload(N Bytes)&#96;等等字段，可以确定一条消息的大小， 即读取到哪里截止。</span><br><span class="line"></span><br><span class="line">### 三、数据的安全性</span><br><span class="line"></span><br><span class="line">##### 1、Producer delivery guarantee生产者如何将数据安全地存入kafka</span><br><span class="line"></span><br><span class="line">- &#96;&#96;&#96;</span><br><span class="line">  0.At least one  消息绝不会丢，但可能会重复传输</span><br><span class="line">  1.At most once  消息可能会丢，但绝不会重复传输</span><br><span class="line">  2.Exactly once  每条消息肯定会被传输一次，且仅传输一次</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><code>Producers</code>可以选择是否为数据的写入接收<code>ack</code>，有以下集中<code>ack</code>的选项：<code>request.required.acks</code></p>
+<ul>
+<li><code>acks = 0</code>：<code>Producer</code>在<code>ISR</code>中的<code>Leader</code>已经成功收到数据并得到确认后发送下一条消息。</li>
+<li><code>acks = 1</code>：<code>Producer</code>无需等待来自<code>Broker</code>的确认而继续发送下一批消息。</li>
+<li><code>acks = all</code>：<code>Producer</code>需要等待<code>ISR</code>中的所有<code>Follower</code>都确认接收到数据之后才算一次发送完成，可靠性最高。</li>
+</ul>
+</li>
+</ul>
+<h5 id="2、ISR机制"><a href="#2、ISR机制" class="headerlink" title="2、ISR机制"></a>2、ISR机制</h5><ul>
+<li>关键字<ul>
+<li>AR：<code>Assigned Replicas</code>用来表示副本的全集</li>
+<li>OSR：<code>out-sync Replicas</code>离开同步队列的副本</li>
+<li>ISR：<code>in-sync Replicas</code>加入同步队列的副本</li>
+<li>ISR = Leader + 没有落后太多的<code>follower</code></li>
+<li>AR = OSR + ISR</li>
+</ul>
+</li>
+<li>备份数据就是防止数据丢失，当主节点挂掉时，可以启用备份节点<ul>
+<li>producer–push—&gt;leader</li>
+<li>leader–pull–&gt;follower</li>
+<li><code>Follower</code>每隔一段时间从<code>leader</code>中拉取数据，来保证数据同步</li>
+</ul>
+</li>
+<li>ISR（in-sync Replica）<ul>
+<li>当主节点挂掉，并不是去<code>follower</code>选择<code>leader</code>，而是从<code>ISR</code>中选择<code>leader</code></li>
+<li>判断标准<ul>
+<li>超过10秒钟没有同步数据：replica.lag.time.max.ms = 10000</li>
+<li>主副节点差4000条数据：replica.lag.time.max.messages = 4000</li>
+</ul>
+</li>
+<li>脏节点选举<ul>
+<li><code>kafka</code>采用一种降级措施来处理，选举第一个恢复的<code>node</code>作为<code>leader</code>提供服务，以它的数据为基准，这个措施被称为脏<code>leader</code>选举</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="3、Broker数据存储机制"><a href="#3、Broker数据存储机制" class="headerlink" title="3、Broker数据存储机制"></a>3、Broker数据存储机制</h5><p>无论消息是否被消费，kafka都会保留所有消息，有两种策略可以删除旧数据：</p>
+<ul>
+<li>基于时间：log.retention.hours = 168</li>
+<li>基于大小：log.retention.bytes = 1073741824</li>
+</ul>
+<h5 id="4、Consumer-delivery-guarantee"><a href="#4、Consumer-delivery-guarantee" class="headerlink" title="4、Consumer delivery guarantee"></a>4、Consumer delivery guarantee</h5><ul>
+<li>如果将<code>consumer</code>设置为<code>autocommit</code>，<code>consumer</code>一旦读到数据立即自动<code>commit</code>，如果只讨论这一读取消息的过程，那<code>kafka</code>确保了<code>Exactly once</code>。</li>
+<li>读完消息先<code>commit</code>再处理消息<ul>
+<li>如果<code>consumer</code>在<code>commit</code>后还没来得及处理消息就<code>crash</code>了，下次重新开始工作后就无法读到刚刚已提交而未处理的消息，可能会漏读一条消息。这就对应于<code>At most once</code>。</li>
+</ul>
+</li>
+<li>读完消息先处理再<code>commit</code>。<ul>
+<li>如果在处理完消息之后<code>commit</code>之前<code>consumer crash</code>了,下次重新开始工作时还会处理刚刚未<code>commit</code>的消息，实际上该消息已经被处理过了。这就对应于<code>At least once</code>。</li>
+</ul>
+</li>
+<li>如果一定要做到<code>Exactly once</code>，就需要协调<code>offset</code>和实际操作的输出。<ul>
+<li>经典的做法是引入两阶段提交</li>
+</ul>
+</li>
+<li><code>kafka</code>默认保证<code>At least once</code>，并且允许通过设置<code>producer</code>异步提交来实现<code>At most once</code>。</li>
+</ul>
+<h5 id="5、数据的消费"><a href="#5、数据的消费" class="headerlink" title="5、数据的消费"></a>5、数据的消费</h5><ul>
+<li><code>pariton_num=2</code>，启动一个<code>consumer</code>进程订阅这个<code>topic</code>，对应的，<code>stream_num</code>设为2，也就是说启两个线程并行处理<code>message</code>。</li>
+<li>如果<code>auto.commit.enable = true</code><ul>
+<li>当<code>consumer</code> 拉取了一些数据但还没有完全处理掉的时候。</li>
+<li>刚好到<code>commit interval</code>出发了提交<code>offset</code>操作，接着<code>consumer</code> crash掉了。</li>
+<li>这时已经fetch的数据还没有处理完成但已经被<code>commit</code>掉，因此没有机会再次被处理，数据丢失。</li>
+</ul>
+</li>
+<li>如果<code>auto.commit.enable = false</code><ul>
+<li>假设<code>consumer</code>的两个<code>fetcher</code>各自拿了一条数据， 并且由两个线程同时处理。</li>
+<li>这时线程<code>t1</code>处理完<code>partition1</code>的数据，手动提交<code>offset</code>，这里需要着重说明的是，当手动执行<code>commit</code>的时候，实际上是对这个<code>consumer</code>进程所占有的所有<code>partition</code>进行<code>commit</code>，<code>kafka</code>暂时还没有提供更细粒度的<code>commit</code>方式。也就是说，即使<code>t2</code>没有处理完<code>partition2</code>的数据，<code>offset</code>也被<code>t1</code>提交掉了。 </li>
+<li>如果这时<code>consumer crash</code>掉，<code>t2</code>正在处理的这条数据就丢失了。</li>
+</ul>
+</li>
+<li>方法1: (将多线程问题转成单线程)<ul>
+<li>手动<code>commit</code> <code>offset</code>，并针对<code>partition_num</code>启同样数目的<code>consumer</code>进程，这样就能保证一个<code>consumer</code>进程占有一个<code>partition</code>。<code>commit offset</code>的时候不会影响别的<code>parition</code>的<code>offset</code>。</li>
+<li>但这个方法比较局限，因为<code>partition</code>和<code>consumer</code>进程的数目必须严格对应。</li>
+</ul>
+</li>
+<li>方法2: (参考HDFS数据写入流程)<ul>
+<li>手动<code>commit offset</code>，另外在<code>consumer</code>端再将所有<code>fetch</code>到的数据缓存到<code>queue</code>里，当把<code>queue</code>里所有的数据处理完之后，再批量提交<code>offset</code>，这样就能保证只有处理完的数据才被<code>commit</code>。</li>
+</ul>
+</li>
+</ul>
+<h3 id="四、Kafka优化"><a href="#四、Kafka优化" class="headerlink" title="四、Kafka优化"></a>四、Kafka优化</h3><h5 id="1、Partition数目"><a href="#1、Partition数目" class="headerlink" title="1、Partition数目"></a>1、Partition数目</h5><ul>
+<li>一般来说，每个<code>Partition</code>能处理的吞吐为几MB/s，增加更多的<code>Partition</code>意味着：<ul>
+<li>更高的并行度和吞吐</li>
+<li>可以扩展更多的（同一个<code>consumer group</code>中的）<code>consumers</code></li>
+<li>若是集群中有较多的<code>brokers</code>，则可更大程度上利用闲置的<code>brokers</code></li>
+<li>但是会造成<code>Zookeeper</code>的更多选举</li>
+<li>也会在<code>Kafka</code>中打开更多的文件</li>
+</ul>
+</li>
+<li>调整规则<ul>
+<li>一般来说，若是集群较小（小于个6个<code>broker</code>），则配置<code>2*broker</code>数的<code>partition</code>数。这里主要考虑的是之后的扩展。若是集群扩展了一倍（例如12个），则不用担心会有<code>partition</code>不足的现象发生。</li>
+<li>一般来说，若是集群较大（大于12个），则配置<code>1*broker</code>数的<code>partition</code>数。因为这里不需要再考虑集群的扩展情况，与<code>broker</code>数相同的<code>partition</code>数已经足够应付常规场景，若有必要，再手动调整。</li>
+<li>考虑最高峰吞吐需要的并行<code>consumer</code>数，调整<code>partition</code>数目。若是应用场景需要有20个（同一个<code>consumer group</code>中的）<code>consumers</code>并行消费，则据此设置为20个<code>partition</code>。</li>
+<li>考虑<code>producer</code>所需的吞吐，调整<code>partition</code>数目（如果<code>producer</code>的吞吐非常高，或是在接下来两年内都比较高，则增加<code>partition</code>数目）。</li>
+</ul>
+</li>
+</ul>
+<h5 id="2、replication-factor"><a href="#2、replication-factor" class="headerlink" title="2、replication factor"></a>2、replication factor</h5><ul>
+<li>此参数决定得到是备份的数目，建议至少设置为2，一般为3，最高设置为4。</li>
+<li>更高的<code>replication factor</code>意味着：<ul>
+<li>系统更稳定（允许 N - 1 个<code>broker</code>宕机）</li>
+<li>更多的副本（如果<code>acks = all</code>，会造成较高的延时）</li>
+<li>系统磁盘的使用率会更高（一般若是RF为3，则相对于RF为2时，会占据更多50%的磁盘空间）</li>
+</ul>
+</li>
+<li>调整准则<ul>
+<li>以3为起始（当然至少需要有3个<code>brokers</code>，同事也不建议一个kafka集群中节点数量少于3个节点）</li>
+<li>如果<code>replication</code>性能成为了瓶颈，则建议使用一个性能更好的<code>broker</code>，而不是降低RF的数目</li>
+<li>不要在生产环境中设置RF为1</li>
+</ul>
+</li>
+</ul>
+<h5 id="3、批量写入"><a href="#3、批量写入" class="headerlink" title="3、批量写入"></a>3、批量写入</h5><p>为了大幅度提高producer写入吞吐量，需要定期批量写文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">每当producer写入10000条消息时，刷数据到磁盘：</span><br><span class="line">log.flush.interval.messages&#x3D;10000</span><br><span class="line"></span><br><span class="line">每间隔一秒，刷数据到磁盘</span><br><span class="line">log.flush.interval.ms&#x3D;1000</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Varrella</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://varrella.github.io/2021/08/13/Kafka%E7%AC%94%E8%AE%B0/">https://varrella.github.io/2021/08/13/Kafka%E7%AC%94%E8%AE%B0/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/gh/varrella/ImgHosting/blog_picturett-2560x1440-bg-183ceb7.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2021/07/28/git%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"><img class="next-cover" src="https://cdn.jsdelivr.net/gh/varrella/ImgHosting/blog_picture1___0G1r-Cg0zS8___0___.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info"></div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Catalog</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81Kafka%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84"><span class="toc-number">1.</span> <span class="toc-text">一、Kafka系统架构</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1%E3%80%81Broker"><span class="toc-number">1.0.1.</span> <span class="toc-text">1、Broker</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2%E3%80%81Topic"><span class="toc-number">1.0.2.</span> <span class="toc-text">2、Topic</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3%E3%80%81Partition"><span class="toc-number">1.0.3.</span> <span class="toc-text">3、Partition</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4%E3%80%81Leader"><span class="toc-number">1.0.4.</span> <span class="toc-text">4、Leader</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#7%E3%80%81Producer"><span class="toc-number">1.0.5.</span> <span class="toc-text">7、Producer</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#8%E3%80%81Consumer"><span class="toc-number">1.0.6.</span> <span class="toc-text">8、Consumer</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#9%E3%80%81Consumer-Group"><span class="toc-number">1.0.7.</span> <span class="toc-text">9、Consumer  Group</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#10%E3%80%81offset%E5%81%8F%E7%A7%BB%E9%87%8F"><span class="toc-number">1.0.8.</span> <span class="toc-text">10、offset偏移量</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#11%E3%80%81Kafka%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84"><span class="toc-number">1.0.9.</span> <span class="toc-text">11、Kafka拓扑结构</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Kafka%E6%95%B0%E6%8D%AE%E6%A3%80%E7%B4%A2%E6%9C%BA%E5%88%B6"><span class="toc-number">2.</span> <span class="toc-text">二、Kafka数据检索机制</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#2%E3%80%81ISR%E6%9C%BA%E5%88%B6"><span class="toc-number">2.0.1.</span> <span class="toc-text">2、ISR机制</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3%E3%80%81Broker%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%9C%BA%E5%88%B6"><span class="toc-number">2.0.2.</span> <span class="toc-text">3、Broker数据存储机制</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4%E3%80%81Consumer-delivery-guarantee"><span class="toc-number">2.0.3.</span> <span class="toc-text">4、Consumer delivery guarantee</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#5%E3%80%81%E6%95%B0%E6%8D%AE%E7%9A%84%E6%B6%88%E8%B4%B9"><span class="toc-number">2.0.4.</span> <span class="toc-text">5、数据的消费</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81Kafka%E4%BC%98%E5%8C%96"><span class="toc-number">3.</span> <span class="toc-text">四、Kafka优化</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1%E3%80%81Partition%E6%95%B0%E7%9B%AE"><span class="toc-number">3.0.1.</span> <span class="toc-text">1、Partition数目</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2%E3%80%81replication-factor"><span class="toc-number">3.0.2.</span> <span class="toc-text">2、replication factor</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3%E3%80%81%E6%89%B9%E9%87%8F%E5%86%99%E5%85%A5"><span class="toc-number">3.0.3.</span> <span class="toc-text">3、批量写入</span></a></li></ol></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url('https://cdn.jsdelivr.net/gh/varrella/ImgHosting/blog_picturett-2560x1440-bg-183ceb7.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By Varrella</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text"><a href="https://varrella.github.io/">我始终相信，走过平湖烟雨，岁月山河，那些历尽劫数，尝遍百味的人，会更加生动而干净。</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="Switch Between Traditional Chinese And Simplified Chinese">简</button><button id="darkmode" type="button" title="Switch Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between single-column and double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom/dist/medium-zoom.min.js"></script><div class="js-pjax"></div><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-nest.min.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/click-heart.min.js" async="async" mobile="false"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
